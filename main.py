@@ -7,7 +7,7 @@ import requests
 from concurrent.futures import ThreadPoolExecutor
 
 # Configure Gemini API key
-genai.configure(api_key="AIzaSyCtbjyQjRa7OmSt1YJDvqKat25f19OiFMk")
+genai.configure(api_key="AIzaSyAcQ64mgrvtNfTR3ebbHcZxzWfRkWHyI-E")
 
 app = FastAPI()
 

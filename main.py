@@ -82,7 +82,6 @@ def needs_human_agent(question: str, answer: str) -> bool:
     keywords = ["complaints", "refunds", "booking issue", "flight problem", "support", "human agent", "live agent"]
     return any(t in answer.lower() for t in triggers) or any(k in question.lower() for k in keywords)
 
-# ✅ NEW: Get IATA code from city name
 def get_city_code(city_name: str) -> str:
     try:
         response = requests.get(CITY_LOOKUP_API + city_name)
@@ -96,7 +95,6 @@ def get_city_code(city_name: str) -> str:
         print(f"City code fetch failed for {city_name}: {e}")
         return ""
 
-# ✈️ Flight Search with city name support
 def get_flight_info(origin_city: str, destination_city: str, departure_date: str):
     try:
         origin_code = get_city_code(origin_city)
@@ -116,18 +114,23 @@ def get_flight_info(origin_city: str, destination_city: str, departure_date: str
         sorted_flights = sorted(flights, key=lambda x: x["price"]["totalFare"])[:3]
         results = []
         for flight in sorted_flights:
-            seg = flight["segments"][0]
+            segments = flight["segments"]
             price = flight["price"]["totalFare"]
             currency = flight["price"]["currency"]
-            line = (
-                f"✈️ {seg['airlineName']} Flight {seg['flightNumber']} from "
-                f"{seg['departureCity']} ({seg['departureAirportCode']}) to {seg['arrivalCity']} ({seg['arrivalAirportCode']})\n"
-                f"🕑 Departure: {seg['departureTime']} → Arrival: {seg['arrivalTime']}\n"
-                f"💺 Class: {seg['cabinClass']} | 💵 Price: {price} {currency}\n"
-            )
-            results.append(line)
 
-        return "\n".join(results)
+            journey_description = []
+            for idx, seg in enumerate(segments):
+                journey_description.append(
+                    f"Segment {idx+1}:\n"
+                    f"✈️ {seg['airlineName']} Flight {seg['flightNumber']} from "
+                    f"{seg['departureCity']} ({seg['departureAirportCode']}) to {seg['arrivalCity']} ({seg['arrivalAirportCode']})\n"
+                    f"🕑 Departure: {seg['departureTime']} → Arrival: {seg['arrivalTime']}\n"
+                    f"💺 Class: {seg['cabinClass']}\n"
+                )
+            journey_str = "\n".join(journey_description)
+            results.append(f"{journey_str}\n💵 Total Price: {price} {currency}\n{'='*50}")
+
+        return "\n\n".join(results)
     except Exception as e:
         return f"Error retrieving flight data: {str(e)}"
 
@@ -143,7 +146,6 @@ def ask_question(question: str):
         detected_language = "en"
     lang_instruction = f"Respond ONLY in {detected_language}." if detected_language != "en" else "Respond in English."
 
-    # Flight query pattern
     import re
     flight_pattern = re.search(r"from\s+([a-zA-Z\s]+)\s+to\s+([a-zA-Z\s]+)\s+on\s+(\d{4}-\d{2}-\d{2})", question.lower())
     if is_flight_query(question) and flight_pattern:
@@ -152,7 +154,6 @@ def ask_question(question: str):
         date = flight_pattern.group(3).strip()
         return {"question": question, "answer": get_flight_info(origin, destination, date)}
 
-    # Default Gemini-powered reply
     prompt = f"""
 You are a helpful AI assistant that answers questions based ONLY on the content of the website below.
 

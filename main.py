@@ -111,7 +111,7 @@ def get_flight_info(origin_city: str, destination_city: str, departure_date: str
         if not flights:
             return "No flights were found for the specified route and date."
 
-        sorted_flights = sorted(flights, key=lambda x: x["price"]["totalFare"])[:3]
+        sorted_flights = sorted(flights, key=lambda x: x["price"]["totalFare"])[:2]
         results = []
         for flight in sorted_flights:
             segments = flight["segments"]

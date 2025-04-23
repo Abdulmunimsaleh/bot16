@@ -6,7 +6,6 @@ import os
 import requests
 from concurrent.futures import ThreadPoolExecutor
 
-# Configure Gemini API key
 genai.configure(api_key="AIzaSyAcQ64mgrvtNfTR3ebbHcZxzWfRkWHyI-E")
 
 app = FastAPI()
@@ -31,7 +30,6 @@ def scrape_website(urls=WEBSITE_PAGES):
                 page.wait_for_selector("body")
                 combined_content += f"\nPage Content from {url}:\n{page.inner_text('body')}\n"
             browser.close()
-
         with open("website_data.json", "w", encoding="utf-8") as f:
             json.dump({"content": combined_content}, f, indent=4)
         return combined_content
@@ -153,6 +151,12 @@ def ask_question(question: str):
         destination = flight_pattern.group(2).strip()
         date = flight_pattern.group(3).strip()
         return {"question": question, "answer": get_flight_info(origin, destination, date)}
+
+    intent_pattern = re.search(r"(book|booking|flight)\s+(to|for)\s+([a-zA-Z\s]+)", question.lower())
+    if intent_pattern:
+        return {
+            "response": "Great! I can help you with that. Could you please tell me:\n1. Which city are you departing from?\n2. Which city do you want to travel to?\n3. What is your departure date (format: YYYY-MM-DD)?"
+        }
 
     prompt = f"""
 You are a helpful AI assistant that answers questions based ONLY on the content of the website below.
